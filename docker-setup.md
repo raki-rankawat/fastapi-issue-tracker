@@ -33,7 +33,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY main.py .
 COPY app/ ./app/
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
 ```
 
 The Dockerfile has to copy every file and folder the app imports. If you add a new top-level folder, add a `COPY` line for it too. Otherwise the container fails on startup with `ModuleNotFoundError: No module named '...'`.
@@ -103,6 +103,69 @@ __pycache__/
 - If you change the `Dockerfile` or `compose.yaml`, stop with `Ctrl+C` and run `docker compose up --build --watch` again.
 
 Live reload only works while `docker compose up --watch` is running. If you start the app some other way, your edits won't show up.
+
+## Deploy: Docker Hub → Render (free)
+
+This pushes your image to Docker Hub, then runs it on Render's free tier.
+
+### 1. Push the image to Docker Hub
+
+1. Create a free account at [hub.docker.com](https://hub.docker.com/) and note your username.
+
+2. Log in from your terminal (opens a browser, or asks for your password / access token):
+
+   ```
+   docker login
+   ```
+
+3. Build the image, tagged as `<your-username>/issue-tracker`:
+
+   ```
+   docker build -t <your-username>/issue-tracker:latest .
+   ```
+
+4. Push it:
+
+   ```
+   docker push <your-username>/issue-tracker:latest
+   ```
+
+   Your image is now public at `docker.io/<your-username>/issue-tracker`.
+
+### 2. Run it on Render
+
+1. Create a free account at [render.com](https://render.com/).
+
+2. In the dashboard: **New → Web Service → Deploy an existing image from a registry**.
+
+3. **Image URL:** `docker.io/<your-username>/issue-tracker:latest`
+
+4. Pick the **Free** instance type, give it a name, and click **Create Web Service**.
+
+5. Render builds and starts the container, then gives you a public URL like
+   `https://issue-tracker-xxxx.onrender.com`. Check `/health` and `/docs` on it.
+
+You don't set a port on Render — it assigns one through the `$PORT` environment
+variable, and the Dockerfile's `CMD` already binds to it (falling back to 8000
+locally).
+
+### Redeploying after a change
+
+```
+docker build -t <your-username>/issue-tracker:latest .
+docker push <your-username>/issue-tracker:latest
+```
+
+Then in Render click **Manual Deploy → Deploy latest reference** (or enable
+auto-deploy on the service).
+
+### Things to know about the free tier
+
+- **The service sleeps after ~15 minutes of no traffic.** The next request wakes
+  it and takes ~30–60 seconds to respond. This is normal for the free plan.
+- **Storage is ephemeral.** `data/issue.json` lives inside the container, so every
+  redeploy or restart wipes all issues. That's fine for a demo; for real
+  persistence you'd add a Render Disk (paid) or switch storage to a database.
 
 ## Cleaning up old images
 
