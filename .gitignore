@@ -1,0 +1,29 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment variables / secrets
+.env
+.env.*
+
+# Local SQLite databases
+*.db
+*.sqlite3
+
+# Claude Code local settings (shared skills in .claude/skills stay tracked)
+.claude/settings.local.json
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
