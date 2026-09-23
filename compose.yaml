@@ -6,6 +6,9 @@ services:
     ports:
       - "8000:8000"
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      # Keep issue data across container rebuilds / `docker compose down`.
+      - issue-data:/app/data
     develop:
       # Bind mounts from Windows don't deliver file-change events to the container,
       # so sync edits into it instead; uvicorn --reload picks them up via inotify.
@@ -16,5 +19,9 @@ services:
           ignore:
             - .venv/
             - __pycache__/
+            - data/
         - action: rebuild
           path: requirements.txt
+
+volumes:
+  issue-data:

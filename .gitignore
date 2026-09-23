@@ -19,6 +19,9 @@ htmlcov/
 *.db
 *.sqlite3
 
+# JSON issue storage (app/storage.py)
+data/
+
 # Claude Code local settings (shared skills in .claude/skills stay tracked)
 .claude/settings.local.json
 
